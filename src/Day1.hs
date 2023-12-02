@@ -13,14 +13,15 @@ part1 = foldr (\l ls -> compute l + ls) 0
         compute xs = 
             let
                 ns = T.filter isDigit xs
-            in case T.null $ T.filter isDigit ns of
-                True -> 0
-                _ -> 10 * digitToInt (T.head ns) + digitToInt (T.last ns)
+            in
+                if T.null $ T.filter isDigit ns
+                    then 0
+                    else 10 * digitToInt (T.head ns) + digitToInt (T.last ns)
 
 part2 :: [T.Text] -> Int
 part2 = foldr (\l ls -> compute l + ls) 0
     where
-        compute xs =
+        compute xs = 
             let ns = getNums xs
             in case ns of
                 [] -> 0
@@ -46,6 +47,7 @@ part2 = foldr (\l ls -> compute l + ls) 0
                     | otherwise = []
                     where
                         n = T.head str
+                    
 
 main :: IO ()
 main = do
@@ -54,14 +56,16 @@ main = do
     print $ part1 lines
     print $ part2 lines
 
-testData :: [T.Text]
-testData =
+-- Part 1 test data
+testData1 :: [T.Text]
+testData1 =
     [ "1abc2"
     , "pqr3stu8vwx"
     , "a1b2c3d4e5f"
     , "treb7uchet"
     ]
 
+-- Part 2 test data
 testData2 :: [T.Text]
 testData2 = 
     [ "two1nine"
