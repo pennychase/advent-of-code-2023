@@ -1,10 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Day4 where
 
 import qualified Data.Maybe as M
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import Data.MultiSet as MSet
+import Data.MultiSet (MultiSet)
 import Data.Set (Set)
-import qualified Data.Set as S
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
@@ -13,25 +18,55 @@ import Text.Megaparsec.Char
 
 import Parser
 
-data Card = Card Int (Set Int) (Set Int) deriving (Show, Eq, Ord)
+-- Card Id WinningNumbers Numbers
+-- data Card = Card Int (Set Int) (Set Int) deriving (Show, Eq, Ord)
+data Card = Card {
+    id :: Int,
+    winners :: Set Int,
+    numbers :: Set Int
+    } deriving (Show, Eq, Ord)
 
-data Card' = Card' Int Card deriving (Show, Eq, Ord)
+data CardCount = CardCount {
+    count :: Int,
+    card :: Card
+    } deriving (Show)
+
+
+-- Part 1
+numWinners :: Card -> Int
+numWinners Card { .. } = Set.size $ Set.intersection winners numbers
 
 score :: Card -> Int
-score (Card _ winners numbers) =
-    case n of
-        0 -> 0
-        1 -> 1
-        _ -> 2 ^ (n-1)
-    where
-        n = S.size $ S.intersection winners numbers
+score card =
+    let
+        n = numWinners card
+    in
+        if n < 2 then n else 2 ^ (n - 1)
+
 
 part1 :: [Card] -> Int
 part1 = foldr (\x xs -> score x + xs) 0
 
--- part2 :: [Card] -> Int
 part2 cards =
-        S.fromList $ map (Card' 0) cards
+    map (addCards cardMap cardCounts) cards
+    where
+        cardCounts = MSet.fromList cards
+        cardMap = Map.fromList cards
+       
+addCards card@Card { .. } cardMap cardCounts =
+    map (MSet.insertMany count cardCounts) newCards
+    where
+        n = numWinners card
+        count = MSet.occurs card cardCounts
+        newCards = M.mapMaybe $ M.map (\k -> M.lookup k cardMap) [id + 1 .. id + n]
+        
+
+
+-- part2 :: [Card] -> Int
+-- part2 cards =
+--         foldl score2 cardMap (Map.elems cardMap)
+--     where
+--         cardMap = makeMap cards
 
 -- Parsing
 
@@ -39,7 +74,7 @@ parseNumbers :: Parser (Set Int)
 parseNumbers = do
     hspace
     numbers <- many intParser
-    pure $ S.fromList numbers
+    pure $ Set.fromList numbers
 
 parseCard :: Parser Card
 parseCard = do
@@ -49,8 +84,7 @@ parseCard = do
     char ':'
     winners <- parseNumbers
     char '|'
-    numbers <- parseNumbers
-    pure $ Card num winners numbers 
+    Card num winners <$> parseNumbers
 
 parseCards :: Parser [Card]
 parseCards = do
