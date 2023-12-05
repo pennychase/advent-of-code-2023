@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Day2 where
 
 import qualified Data.List as L
@@ -10,12 +12,6 @@ import Text.Megaparsec.Char
 import Parser
 
 data Color = Red | Green | Blue deriving (Show, Eq, Ord)
-
-strToColor s =
-    case s of
-        "red" -> Red
-        "green" -> Green
-        "blue" -> Blue
 
 data Game = Game Int [[(Int, Color)]] deriving Show
 
@@ -63,8 +59,8 @@ parseCount = do
     hspace
     cnt <- intParser
     hspace
-    color <- string "red" <|> string "green" <|> string "blue"
-    pure (cnt, strToColor color)
+    color <- Red <$ string "red" <|> Green <$ string "green" <|> Blue <$ string "blue"
+    pure (cnt, color)
 
 
 parseGame :: Parser Game
@@ -72,8 +68,7 @@ parseGame = do
     string "Game "
     game <- intParser
     char ':'
-    counts <- ((csvParser parseCount) `sepBy` (char ';'))
-    pure $ Game game counts
+    Game game <$> (csvParser parseCount) `sepBy` (char ';')
 
 parseGames :: Parser [Game]
 parseGames = do

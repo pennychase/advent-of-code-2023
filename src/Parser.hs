@@ -8,7 +8,7 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Void
 
-type Parser = Parsec Void String
+type Parser = Parsec Void Text
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme hspace
@@ -34,7 +34,7 @@ pairParser c = do
 lineParser :: Parser a -> Parser [a]
 lineParser parser = sepEndBy1 parser eol
 
-readInput' :: String -> Parser a -> IO a
+readInput' :: Text -> Parser a -> IO a
 readInput' str parser = do
     case runParser parser "" str of
         Left _ -> error "Unable to parse input"
@@ -42,7 +42,7 @@ readInput' str parser = do
 
 readInput :: FilePath -> Parser a -> IO a
 readInput path parser = do
-    contents <- readFile path
+    contents <- T.readFile path
     case runParser parser "" contents of
         Left _ -> error "Unable to parse input"
         Right input -> pure input
