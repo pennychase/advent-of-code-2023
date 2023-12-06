@@ -6,7 +6,7 @@ module Day4 where
 import qualified Data.Maybe as M
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import Data.MultiSet as MSet
+import qualified Data.MultiSet as MSet
 import Data.MultiSet (MultiSet)
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -18,19 +18,11 @@ import Text.Megaparsec.Char
 
 import Parser
 
--- Card Id WinningNumbers Numbers
--- data Card = Card Int (Set Int) (Set Int) deriving (Show, Eq, Ord)
 data Card = Card {
-    id :: Int,
+    cardId :: Int,
     winners :: Set Int,
     numbers :: Set Int
     } deriving (Show, Eq, Ord)
-
-data CardCount = CardCount {
-    count :: Int,
-    card :: Card
-    } deriving (Show)
-
 
 -- Part 1
 numWinners :: Card -> Int
@@ -43,30 +35,24 @@ score card =
     in
         if n < 2 then n else 2 ^ (n - 1)
 
-
 part1 :: [Card] -> Int
 part1 = foldr (\x xs -> score x + xs) 0
 
-part2 cards =
-    map (addCards cardMap cardCounts) cards
-    where
-        cardCounts = MSet.fromList cards
-        cardMap = Map.fromList cards
+-- Part 2
+part2 :: [Card] -> Int 
        
-addCards card@Card { .. } cardMap cardCounts =
-    map (MSet.insertMany count cardCounts) newCards
+addCards cardMap cardCounts card@Card { .. }  =
+    foldr (\c cs -> MSet.insertMany c count cs) cardCounts newCards
     where
         n = numWinners card
-        count = MSet.occurs card cardCounts
-        newCards = M.mapMaybe $ M.map (\k -> M.lookup k cardMap) [id + 1 .. id + n]
-        
+        count = MSet.occur card cardCounts
+        newCards = M.catMaybes $ map (\k -> Map.lookup k cardMap) [cardId + 1 .. cardId + n]
 
-
--- part2 :: [Card] -> Int
--- part2 cards =
---         foldl score2 cardMap (Map.elems cardMap)
---     where
---         cardMap = makeMap cards
+part2 cards =
+    MSet.size $ foldl (addCards cardMap) cardCounts cards
+    where
+        cardCounts = MSet.fromList cards
+        cardMap = Map.fromList $ zip (map cardId cards) cards     
 
 -- Parsing
 
@@ -93,7 +79,8 @@ parseCards = do
 main :: IO ()
 main = do
     cards <- readInput "./data/day4.txt" parseCards
-    putStrLn $ "Part 1:" <> show (part1 cards)
+    putStrLn $ "Part 1: " <> show (part1 cards)
+    putStrLn $ "Part 2: " <> show (part2 cards)
 
 -- Testing
 
