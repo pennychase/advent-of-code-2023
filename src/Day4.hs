@@ -39,20 +39,24 @@ part1 :: [Card] -> Int
 part1 = foldr (\x xs -> score x + xs) 0
 
 -- Part 2
-part2 :: [Card] -> Int 
-       
+part2 :: [Card] -> Int
+
+-- Determine how many cards are received each round
+-- Will receive count copies of the n cards following the current card, where n is the number of winners
+-- and count is the current number of the current card
 addCards cardMap cardCounts card@Card { .. }  =
-    foldr (\c cs -> MSet.insertMany c count cs) cardCounts newCards
+    foldr (`MSet.insertMany` count) cardCounts newCards
     where
         n = numWinners card
         count = MSet.occur card cardCounts
-        newCards = M.catMaybes $ map (\k -> Map.lookup k cardMap) [cardId + 1 .. cardId + n]
+        newCards = M.mapMaybe (`Map.lookup` cardMap) [cardId + 1 .. cardId + n]
 
+-- For each card, call addCards　and insert in the MultiSet. The total number of cards is the size of the MultiSet
 part2 cards =
     MSet.size $ foldl (addCards cardMap) cardCounts cards
     where
         cardCounts = MSet.fromList cards
-        cardMap = Map.fromList $ zip (map cardId cards) cards     
+        cardMap = Map.fromList $ zip (map cardId cards) cards
 
 -- Parsing
 
