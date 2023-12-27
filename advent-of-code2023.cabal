@@ -32,7 +32,9 @@ library
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:  base ^>=4.17.2.0,
+                    array,
                     containers,
+                    linear,
                     megaparsec,
                     multiset,
                     text
